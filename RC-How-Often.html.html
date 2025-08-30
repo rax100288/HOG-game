@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>How Often Do You...? Game with Realistic Cardboard Boxes & Countdown</title>
+<style>
+  body {
+    font-family: 'Arial Rounded MT Bold', sans-serif;
+    background: linear-gradient(135deg, #6c63ff, #42a5f5);
+    color: #fff;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+  }
+  h1 {
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+  }
+  .scoreboard {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin: 20px 0;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 15px 25px;
+    border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  }
+  .team {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px 20px;
+    border-radius: 10px;
+    transition: all 0.5s ease;
+  }
+  .team h2 {
+    margin: 0;
+    font-size: 1.2em;
+  }
+  .score {
+    font-size: 2em;
+    color: #ffeb3b;
+    margin: 10px 0;
+  }
+  .buttons button {
+    background: #42a5f5;
+    border: none;
+    color: #fff;
+    font-weight: bold;
+    border-radius: 6px;
+    margin: 2px;
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  .buttons button:hover {
+    background: #1e88e5;
+  }
+  .leader {
+    border: 3px solid gold;
+    box-shadow: 0 0 20px gold, 0 0 40px gold;
+    transform: scale(1.05);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 15px;
+    max-width: 780px;
+    margin: 20px auto;
+  }
+  /* Realistic cardboard box style */
+  .card {
+    position: relative;
+    width: 95px;
+    height: 95px;
+    cursor: pointer;
+    border-radius: 12px;
+    background: linear-gradient(145deg, #efeadb, #cebf99);
+    box-shadow:
+      inset 0 0 15px 2px #fdf9f1,
+      inset 7px 6px 15px rgba(0,0,0,0.15),
+      8px 8px 12px rgba(109, 84, 42, 0.7);
+    font-weight: 900;
+    font-size: 1.8em;
+    color: #5f4a1b;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    perspective: 800px;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+    user-select: none;
+  }
+  .card.flipping {
+    transform: rotateY(180deg);
+  }
+  /* subtle shading lines to imitate cardboard folds */
+  .card::before, .card::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    border-radius: 12px;
+  }
+  .card::before {
+    top: 4px; left: 8px; right: 8px; height: 4px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.7), transparent);
+    filter: brightness(1.05);
+  }
+  .card::after {
+    left: 6px; top: 8px; bottom: 8px; width: 4px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.6), transparent);
+    filter: brightness(1.05);
+  }
+  /* Color themes */
+  .blue  { background: linear-gradient(145deg, #cee3fd, #9bb8db); color: #1a2f54; box-shadow: inset 0 0 15px 2px #dbedff, inset 7px 6px 15px rgba(0,0,0,0.15), 8px 8px 15px rgba(38,57,96,0.7); }
+  .green { background: linear-gradient(145deg, #d6f1d4, #9bcb99); color: #2a4820; box-shadow: inset 0 0 15px 2px #e4f4e4, inset 7px 6px 15px rgba(0,0,0,0.15), 8px 8px 15px rgba(40,66,33,0.7); }
+  .orange { background: linear-gradient(145deg, #ffe7c6, #d9b573); color: #6d4b1b; box-shadow: inset 0 0 15px 2px #ffedd6, inset 7px 6px 15px rgba(0,0,0,0.15), 8px 8px 15px rgba(121,84,31,0.7); }
+  .purple { background: linear-gradient(145deg, #ecdffb, #9375b9); color: #3a2961; box-shadow: inset 0 0 15px 2px #f3e9fe, inset 7px 6px 15px rgba(0,0,0,0.15), 8px 8px 15px rgba(73,54,110,0.7); }
+  .pink   { background: linear-gradient(145deg, #f9cad9, #bf6882); color: #681b42; box-shadow: inset 0 0 15px 2px #fce0e9, inset 7px 6px 15px rgba(0,0,0,0.15), 8px 8px 15px rgba(127,39,72,0.7); }
+  .red    { background: linear-gradient(145deg, #f7b4b4, #bf4a4a); color: #5e1515; box-shadow: inset 0 0 15px 2px #fbdcdc, inset 7px 6px 15px rgba(0,0,0,0.15), 8px 8px 15px rgba(112,31,31,0.7); }
+
+  .overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.85);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    flex-direction: column;
+  }
+  .overlay.show {
+    display: flex;
+    opacity: 1;
+  }
+  .overlay.hide {
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+  .question-box {
+    background: #f9f9f9;
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 700px;
+    text-align: center;
+    font-size: 1.5em;
+    font-weight: bold;
+    line-height: 1.4;
+    color: #333;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    animation: fadeInPop 0.5s;
+    margin-bottom: 30px;
+  }
+  @keyframes fadeInPop {
+    from {opacity: 0; transform: scale(0.9);}
+    to {opacity: 1; transform: scale(1);}
+  }
+  /* Countdown overlay */
+  #countdownOverlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.95);
+    z-index: 1100;
+    font-size: 6rem;
+    font-weight: bold;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  #countdownNum {
+    transition: color 0.5s ease;
+  }
+  #stopCountdownBtn {
+    margin-top: 30px;
+    font-size: 2rem;
+    padding: 10px 25px;
+    cursor: pointer;
+    border-radius: 10px;
+    border: none;
+    background-color: #d63333;
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 0 20px #d63333;
+  }
+  #stopCountdownBtn:hover {
+    background-color: #a82a2a;
+  }
+  .reset-btn {
+    background: #ff5252;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    margin: 20px 0;
+    color: #fff;
+    transition: background 0.3s;
+  }
+  .reset-btn:hover {
+    background: #e53935;
+  }
+  #customQuestionsContainer {
+    max-width: 700px;
+    margin: 20px auto 40px auto;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    color: #fff;
+    font-size: 1em;
+    font-family: 'Arial Rounded MT Bold', sans-serif;
+  }
+  #customQuestions {
+    width: 100%;
+    height: 120px;
+    border-radius: 8px;
+    padding: 10px;
+    resize: vertical;
+    font-size: 1em;
+    font-family: monospace;
+  }
+  #customButtons {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+  #customButtons button {
+    background: #42a5f5;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    color: white;
+    transition: background 0.3s;
+  }
+  #customButtons button:hover {
+    background: #1e88e5;
+  }
+  .info-text {
+    font-size: 0.9em;
+    color: #ddd;
+    margin-bottom: 8px;
+    font-style: italic;
+    user-select: none;
+  }
+</style>
+</head>
+<body>
+<h1>🎲 How Often Do You...? 🎲</h1>
+
+<div class="scoreboard">
+  <div class="team" id="teamA">
+    <h2 contenteditable="true">Group A</h2>
+    <div class="score" id="scoreA">0</div>
+    <div class="buttons">
+      <button onclick="playPointSound(); addScore('A',1)">+1</button>
+      <button onclick="playPointSound(); addScore('A',2)">+2</button>
+      <button onclick="playPointSound(); addScore('A',3)">+3</button>
+      <button onclick="playPointSound(); addScore('A',4)">+4</button>
+      <button onclick="playPointSound(); addScore('A',5)">+5</button>
+    </div>
+  </div>
+  <div class="team" id="teamB">
+    <h2 contenteditable="true">Group B</h2>
+    <div class="score" id="scoreB">0</div>
+    <div class="buttons">
+      <button onclick="playPointSound(); addScore('B',1)">+1</button>
+      <button onclick="playPointSound(); addScore('B',2)">+2</button>
+      <button onclick="playPointSound(); addScore('B',3)">+3</button>
+      <button onclick="playPointSound(); addScore('B',4)">+4</button>
+      <button onclick="playPointSound(); addScore('B',5)">+5</button>
+    </div>
+  </div>
+  <div class="team" id="teamC">
+    <h2 contenteditable="true">Group C</h2>
+    <div class="score" id="scoreC">0</div>
+    <div class="buttons">
+      <button onclick="playPointSound(); addScore('C',1)">+1</button>
+      <button onclick="playPointSound(); addScore('C',2)">+2</button>
+      <button onclick="playPointSound(); addScore('C',3)">+3</button>
+      <button onclick="playPointSound(); addScore('C',4)">+4</button>
+      <button onclick="playPointSound(); addScore('C',5)">+5</button>
+    </div>
+  </div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="overlay" id="overlay">
+  <div class="question-box" id="questionBox"></div>
+</div>
+
+<div id="countdownOverlay" style="display:none;">
+  <div id="countdownNum">20</div>
+  <button id="stopCountdownBtn">Stop Countdown</button>
+</div>
+
+<button class="reset-btn" onclick="resetGame()">🔄 Reset Game</button>
+
+<div id="customQuestionsContainer">
+  <div class="info-text">Edit or add your own questions below. One question per line. Press "Load Questions" to update the game.</div>
+  <textarea id="customQuestions"></textarea>
+  <div id="customButtons">
+    <button onclick="loadCustomQuestions()">Load Questions</button>
+    <button onclick="resetCustomQuestions()">Reset to Default</button>
+  </div>
+</div>
+
+<audio id="flipSound" src="https://assets.codepen.io/605876/wood-flip.ogg" preload="auto"></audio>
+<audio id="pointSound" src="https://assets.codepen.io/605876/chime-win.ogg" preload="auto"></audio>
+
+<script>
+  const defaultQuestions = [
+    "How often do you exercise during the week?",
+    "How often do you read books or articles for fun?",
+    "How often do you cook meals at home?",
+    "How often do you listen to music?",
+    "How often do you travel outside your city?",
+    "How often do you check social media?",
+    "How often do you watch movies or TV shows?",
+    "How often do you go shopping?",
+    "How often do you call or message your friends?",
+    "How often do you try something new, like a hobby or food?",
+    "How often do you clean your living space?",
+    "How often do you spend time outdoors?",
+    "How often do you go to a restaurant or café?",
+    "How often do you wake up early on weekends?",
+    "How often do you set aside time just to relax?"
+  ];
+  let questions = [...defaultQuestions];
+  const colors = ["blue", "green", "orange", "purple", "pink", "red"];
+  const grid = document.getElementById("grid");
+  const overlay = document.getElementById("overlay");
+  const questionBox = document.getElementById("questionBox");
+  const countdownOverlay = document.getElementById("countdownOverlay");
+  const countdownNum = document.getElementById("countdownNum");
+  const stopCountdownBtn = document.getElementById("stopCountdownBtn");
+  const flipSound = document.getElementById("flipSound");
+  const pointSound = document.getElementById("pointSound");
+
+  let scores = { A: 0, B: 0, C: 0 };
+  let countdownTimer = null;
+  let countdownValue = 20;
+
+  function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
+  function generateCards() {
+    grid.innerHTML = "";
+    const shuffled = shuffle([...questions]);
+    shuffled.forEach((q, index) => {
+      const card = document.createElement("div");
+      card.className = "card " + colors[index % colors.length];
+      card.textContent = index + 1;
+      card.addEventListener("click", () => flipAndShow(card, q));
+      grid.appendChild(card);
+    });
+  }
+
+  function flipAndShow(card, question) {
+    flipSound.currentTime = 0;
+    flipSound.play();
+    card.classList.add("flipping");
+    setTimeout(() => {
+      questionBox.textContent = question;
+      showOverlay();
+      setTimeout(() => {
+        hideOverlay(() => {
+          card.remove();
+          startCountdown();
+        });
+      }, 7000);
+    }, 600);
+  }
+
+  function showOverlay() {
+    overlay.style.display = "flex";
+    setTimeout(() => overlay.classList.add("show"), 20);
+  }
+
+  function hideOverlay(callback) {
+    overlay.classList.remove("show");
+    overlay.classList.add("hide");
+    setTimeout(() => {
+      overlay.style.display = "none";
+      overlay.classList.remove("hide");
+      if (callback) callback();
+    }, 800);
+  }
+
+  function startCountdown() {
+    countdownValue = 20;
+    countdownNum.textContent = countdownValue;
+    countdownNum.style.color = "white";
+    countdownOverlay.style.display = "flex";
+    clearInterval(countdownTimer);
+    countdownTimer = setInterval(() => {
+      countdownValue--;
+      countdownNum.textContent = countdownValue;
+      if (countdownValue <= 10) {
+        countdownNum.style.color = "red";
+      }
+      if (countdownValue <= 0) {
+        stopCountdown();
+      }
+    }, 1000);
+  }
+
+  function stopCountdown() {
+    clearInterval(countdownTimer);
+    countdownOverlay.style.display = "none";
+  }
+
+  stopCountdownBtn.addEventListener("click", () => {
+    stopCountdown();
+  });
+
+  function addScore(team, points) {
+    scores[team] += points;
+    document.getElementById("score" + team).textContent = scores[team];
+    updateLeaderHighlight();
+    playPointSound();
+  }
+
+  function playPointSound() {
+    pointSound.currentTime = 0;
+    pointSound.play();
+  }
+
+  function updateLeaderHighlight() {
+    let maxScore = Math.max(scores.A, scores.B, scores.C);
+    ["A", "B", "C"].forEach(t => {
+      let teamDiv = document.getElementById("team" + t);
+      if (scores[t] === maxScore && maxScore > 0) {
+        teamDiv.classList.add("leader");
+      } else {
+        teamDiv.classList.remove("leader");
+      }
+    });
+  }
+
+  function resetGame() {
+    scores = { A: 0, B: 0, C: 0 };
+    ["A", "B", "C"].forEach(t => {
+      document.getElementById("score" + t).textContent = 0;
+      document.getElementById("team" + t).classList.remove("leader");
+    });
+    overlay.style.display = "none";
+    overlay.classList.remove("show","hide");
+    stopCountdown();
+    generateCards();
+  }
+
+  window.onload = () => {
+    generateCards();
+    // Hide countdown on start
+    countdownOverlay.style.display = "none";
+  };
+
+  // Custom Questions Editor
+  const customQuestionsTextarea = document.getElementById("customQuestions");
+  function loadCustomQuestions() {
+    let lines = customQuestionsTextarea.value.split("\n").map(line => line.trim()).filter(line => line.length > 0);
+    if(lines.length === 0) {
+      alert("Please enter at least one question.");
+      return;
+    }
+    questions = lines;
+    resetGame();
+  }
+  function resetCustomQuestions() {
+    questions = [...defaultQuestions];
+    customQuestionsTextarea.value = questions.join("\n");
+    resetGame();
+  }
+  window.onload = () => {
+    generateCards();
+    customQuestionsTextarea.value = questions.join("\n");
+    countdownOverlay.style.display = "none";
+  };
+</script>
+</body>
+</html>
